@@ -4,28 +4,50 @@ class TextLineNumbers(tk.Canvas):
     def __init__(self, *args, **kwargs):
         tk.Canvas.__init__(self, *args, **kwargs)
         self.textwidget = None
-        self.lastline =  0
+        self.lastline =  1
 
     def attach(self, text_widget):
         self.textwidget = text_widget
+        log = open("test.txt", "r")
+
+        texts = []
+
+        for c,l in enumerate(log):
+            self.textwidget.insert("%d.0" % (c+1), l.split("|")[1])
 
     def redraw(self, *args):
         '''redraw line numbers'''
         self.delete("all")
 
         i = self.textwidget.index("@0,0")
+        log = open("test.txt", "r")
+
+        texts = []
+        hours = []
+
+        for c,l in enumerate(log):
+            hours.append(l.split("|")[0])
+
+        lastlinenumber = c + 1
+        self.lastline = c + 1
+
         while True :
             dline= self.textwidget.dlineinfo(i)
             if dline is None: break
             y = dline[1]
             linenum = str(i).split(".")[0]
-            lastlinenumber = int(self.textwidget.index(tk.END).split(".")[0])
-            if lastlinenumber != self.lastline:
-                if lastlinenumber >= self.lastline:
-                    self.textwidget.insert(tk.END, "00 : 00 : 00 | ")
-                self.lastline = lastlinenumber
-            time = self.textwidget.get("%d.0" % int(linenum), tk.END).split("|")[0]
-            self.create_text(2,y,anchor="nw", text=(linenum+" "+time))
+
+            if int(linenum) >= self.lastline:
+                log = open("test.txt", "a")
+                log.write("\nheure | nouvelle heure")
+                hours.append("heure")
+                log.close()
+                self.lastline = int(linenum)
+            print(linenum)
+            if (int(linenum) < self.lastline):
+                self.create_text(2,y,anchor="nw", text=(linenum+" "+hours[int(linenum)-1]))
+            else:
+                self.create_text(2,y,anchor="nw", text=linenum)
             i = self.textwidget.index("%s+1line" % i)
 
 class CustomText(tk.Text):
@@ -59,7 +81,7 @@ class CustomText(tk.Text):
         '''.format(widget=str(self)))
 
 
-class Example(tk.Frame):
+class Window(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
         self.text = CustomText(self)
@@ -75,11 +97,11 @@ class Example(tk.Frame):
 
         self.text.bind("<<Change>>", self._on_change)
         self.text.bind("<Configure>", self._on_change)
-        self.text.insert("end", "test")
+
     def _on_change(self, event):
         self.linenumbers.redraw()
 
 if __name__ == "__main__":
     root = tk.Tk()
-    Example(root).pack(side="top", fill="both", expand=True)
+    Window(root).pack(side="top", fill="both", expand=True)
     root.mainloop()
