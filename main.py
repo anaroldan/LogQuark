@@ -1,23 +1,27 @@
 import tkinter as tk
 import time
 from time import gmtime, strftime
+import os
 class TextLineNumbers(tk.Canvas):
     def __init__(self, *args, **kwargs):
         tk.Canvas.__init__(self, *args, **kwargs)
         self.textwidget = None
         self.lastline =  1
-        self.line_at_beginning = 0
+        self.lineatbeginning = 0
+        self.firstwrite = True
+        self.filename = ""
 
-    def attach(self, text_widget):
+    def attach(self, text_widget, file_name):
         self.textwidget = text_widget
+        self.filename = file_name
         try:
-            log = open("test.txt", "r")
+            log = open(self.filename, "r")
             for c,l in enumerate(log):
                 if len(l.split("|")) >= 2:
                     self.textwidget.insert("%d.0" % (c+1), l.split("|")[1])
                 else:
                     print ("error")
-            self.line_at_beginning = c + 1
+            self.lineatbeginning = c + 1
         except FileNotFoundError:
             pass
 
@@ -30,7 +34,7 @@ class TextLineNumbers(tk.Canvas):
         empty_lines = 0
         count = 0
         try:
-            log = open("test.txt", "r")
+            log = open(self.filename, "r")
             for c,l in enumerate(log):
                 count  = c + 1
                 if len(l.split("|")) >= 2:
@@ -52,19 +56,20 @@ class TextLineNumbers(tk.Canvas):
             line_text = self.textwidget.get("%d.0" % int(linenum), "%d.end" % int(linenum))
 
             if (int(linenum)) > self.lastline:
-                if self.line_at_beginning < (int(linenum) + 2):
+                if self.lineatbeginning < (int(linenum) + 2):
                     last_line = self.textwidget.get("%d.0" % (int(linenum)-1), "%d.end" % (int(linenum)-1))
-                    log = open("test.txt", "a")
-                    log.write(heure +  "|" + last_line + "\n")
+                    log = open(self.filename, "a")
+                    if self.lineatbeginning == 0 and self.firstwrite is True:
+                        self.firstwrite = False
+                        log.write(heure +  "|" + last_line)
+                    else:
+                        log.write("\n" + heure + "|" + last_line)
                 self.lastline = int(linenum)
 
             if (len(line_text) >= 1) and self.lastline == int(linenum):
                 heure = strftime("%H:%M:%S", time.localtime())
                 if len(hours) < self.lastline:
                      hours.append(heure)
-
-            print(linenum + " and last: " + str(self.lastline))
-            print(hours)
 
             if (int(linenum) <= self.lastline and len(line_text) >= 1):
                 self.create_text(2,y,anchor="nw", text=(linenum+" "+hours[int(linenum)-1]))
@@ -112,7 +117,25 @@ class Window(tk.Frame):
         self.text.configure(yscrollcommand=self.vsb.set)
         self.text.tag_configure("bigfont", font=("Helvetica", "12", "bold"))
         self.linenumbers = TextLineNumbers(self, width=80)
-        self.linenumbers.attach(self.text)
+
+        folder = os.path.dirname(os.path.realpath(__file__))
+        month = strftime("%m", time.localtime())
+        year = strftime("%y", time.localtime())
+        file_name = strftime("%d", time.localtime())
+        self.winfo_toplevel().title(year + "/" + month + "/" + file_name)
+        file_path = os.path.join(folder, year, month, file_name)
+
+        try:
+            os.mkdir(os.path.join(folder, year))
+        except:
+            pass
+
+        try:
+            os.mkdir(os.path.join(folder, year, month))
+        except:
+            pass
+
+        self.linenumbers.attach(self.text, file_path + ".txt")
 
         self.vsb.pack(side="right", fill="y")
         self.linenumbers.pack(side="left", fill="y")
