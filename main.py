@@ -1,5 +1,6 @@
 import tkinter as tk
-
+import time
+from time import gmtime, strftime
 class TextLineNumbers(tk.Canvas):
     def __init__(self, *args, **kwargs):
         tk.Canvas.__init__(self, *args, **kwargs)
@@ -13,7 +14,10 @@ class TextLineNumbers(tk.Canvas):
         texts = []
 
         for c,l in enumerate(log):
-            self.textwidget.insert("%d.0" % (c+1), l.split("|")[1])
+            if len(l.split("|")) >= 2:
+                self.textwidget.insert("%d.0" % (c+1), l.split("|")[1])
+            else:
+                print ("error")
 
     def redraw(self, *args):
         '''redraw line numbers'''
@@ -26,7 +30,10 @@ class TextLineNumbers(tk.Canvas):
         hours = []
 
         for c,l in enumerate(log):
-            hours.append(l.split("|")[0])
+            if len(l.split("|")) >= 2:
+                hours.append(l.split("|")[0])
+            else:
+                pass
 
         lastlinenumber = c + 1
         self.lastline = c + 1
@@ -37,17 +44,19 @@ class TextLineNumbers(tk.Canvas):
             y = dline[1]
             linenum = str(i).split(".")[0]
 
-            if int(linenum) >= self.lastline:
+            if (int(linenum) - 1) >= self.lastline:
                 log = open("test.txt", "a")
-                log.write("\nheure | nouvelle heure")
-                hours.append("heure")
+                heure = strftime("%H:%M:%S", time.localtime())
+                log.write("\n" + heure +  " | nouvelle heure")
+                hours.append(heure)
                 log.close()
                 self.lastline = int(linenum)
-            print(linenum)
+            print(linenum + " and last: " + str(self.lastline))
             if (int(linenum) < self.lastline):
                 self.create_text(2,y,anchor="nw", text=(linenum+" "+hours[int(linenum)-1]))
             else:
                 self.create_text(2,y,anchor="nw", text=linenum)
+
             i = self.textwidget.index("%s+1line" % i)
 
 class CustomText(tk.Text):
