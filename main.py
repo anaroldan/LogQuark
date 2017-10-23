@@ -117,10 +117,9 @@ class Window(tk.Frame):
         self.text.configure(yscrollcommand=self.vsb.set)
         self.text.tag_configure("bigfont", font=("Helvetica", "12", "bold"))
         self.linenumbers = TextLineNumbers(self, width=80)
-
-        folder = os.path.dirname(os.path.realpath(__file__))
+        folder = os.path.dirname(os.path.realpath(__file__))    # getting folder path for any os
         month = strftime("%m", time.localtime())
-        year = strftime("%y", time.localtime())
+        year = "20" + strftime("%y", time.localtime())
         file_name = strftime("%d", time.localtime())
         self.winfo_toplevel().title(year + "/" + month + "/" + file_name)
         file_path = os.path.join(folder, year, month, file_name)
